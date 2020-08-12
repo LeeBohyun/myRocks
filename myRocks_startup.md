@@ -1,4 +1,4 @@
-# MySQL/MyRocks Installation and TPC-C testing: 
+# MySQL/MyRocks Installation and TPC-C/Sysbench testing: 
 
 **:warning: experiment setup based on Ubuntu 16.04.**
 
