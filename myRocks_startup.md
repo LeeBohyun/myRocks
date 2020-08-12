@@ -38,8 +38,8 @@ $ git submodule update
 
 $vim ~/.bashrc
 ...
-export PATH=/home/lbh/mysql-5.6/bin:$PATH                                                     │·····································
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/lbh/mysql-5.6/lib/ 
+export PATH=$PATH:/home/lbh/mysql-5.6/bin:/home/lbh/mysql-5.6/scripts
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/lbh/mysql-5.6/lib/
 ... :wq
 $ source ~/.bashrc
 
