@@ -47,3 +47,24 @@ $ cmake . -DCMAKE_BUILD_TYPE=RelWithDebInfo -DWITH_SSL=system -DWITH_ZLIB=bundle
 $ time make
 $ sudo make install && make clean
 ```
+## TPC-C Testing
+Since MyRocks ahve different storage engine and does not support foreign key, we need to create new sql file and load data. 
+
+```bash
+$ cat create_table.sql | sed -e "s/Engine=InnoDB/Engine=RocksDB DEFAULT COLLATE=latin1_bin/g" > create_table_myrocks.sql
+$ grep -v "FOREIGN KEY" add_fkey_idx.sql > add_fkey_idx_myrocks.sql 
+```
+Do rest of the steps [likewise](https://github.com/LeeBohyun/mysql-tpcc/blob/master/multi-mysql-tpcc.md).
+
+## Sysbench Testing
+
+-Data Load:
+```bash
+$ sysbench --test=/home/lbh/sysbench-1.0.12/tests/include/oltp_legacy/oltp.lua --mysql-host=localhost  --mysql-db=sbtest --mysql-user=root --mysql-password=evia6587 --max-requests=0  --oltp-table-size=2000000 --max-time=600  --oltp-tables-count=200 --report-interval=10 --db-ps-mode=disable  --random-points=10 --mysql-table-engine=rocksdb --mysql-socket=/tmp/mysql.sock1 --mysql-port=3307 --num-threads=128  prepare
+```
+
+-Sysbench Testing:
+```bash
+$ sysbench --test=/home/lbh/sysbench-1.0.12/tests/include/oltp_legacy/oltp.lua --mysql-host=localhost  --mysql-db=sbtest --mysql-user=root --mysql-password=evia6587 --max-requests=0  --oltp-table-size=2000000 --time=259200 --oltp-tables-count=200 --report-interval=10 --db-ps-mode=disable  --random-points=10 --mysql-table-engine=rocksdb --mysql-socket=/tmp/mysql.sock1 --mysql-port=3307 --num-threads=128  run |tee /home/lbh/result/sb-ns.txt
+```
+
