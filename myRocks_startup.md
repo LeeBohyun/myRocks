@@ -43,16 +43,96 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/lbh/mysql-5.6/lib/
 ... :wq
 $ source ~/.bashrc
 
-$ cmake . -DCMAKE_BUILD_TYPE=RelWithDebInfo -DWITH_SSL=system -DWITH_ZLIB=bundled -DMYSQL_MAINTAINER_MODE=0 -DENABLED_LOCAL_INFILE=1 -DCMAKE_INSTALL_PREFIX=/home/lbh/mysql-5.6
-$ time make
-$ sudo make install && make clean
+$ cmake . -DCMAKE_BUILD_TYPE=RelWithDebInfo -DWITH_SSL=system -DWITH_ZLIB=bundled -DMY_SQL_MAINTAINER_MODE=0 -DENABLED_LOCAL_INFILE=1 -DENABLE_DTRACE=0 -DCMAKE_CXX_FLAGS="-march=native" -DDOWNLOAD_BOOST=ON -DWITH_BOOST=/home/lbh/mysql-5.7.24 -DCMAKE_INSTALL_PREFIX=/home/lbh/mysql-5.6
+$ sudo make -j8 install
 ```
+### Example myrocks.cnf
+```bash
+$ vim my.cnf
+[mysqld]
+rocksdb
+default-storage-engine=rocksdb
+skip-innodb
+default-tmp-storage-engine=MyISAM
+collation-server=latin1_bin
+log-bin
+binlog-format=ROW
+
+socket=/tmp/mysql.sock
+port=3306
+datadir=/home/mijin/test_data
+
+rocksdb_max_open_files=-1
+rocksdb_max_background_jobs=8
+rocksdb_max_total_wal_size=4G
+rocksdb_block_size=16384
+rocksdb_table_cache_numshardbits=6
+rocksdb_block_cache_size=10G
+
+# rate limiter
+rocksdb_bytes_per_sync=4194304
+rocksdb_wal_bytes_per_sync=4194304
+rocksdb_rate_limiter_bytes_per_sec=104857600
+
+# triggering compaction if there are many sequential deletes
+rocksdb_compaction_sequential_deletes_count_sd=1
+rocksdb_compaction_sequential_deletes=199999
+rocksdb_compaction_sequential_deletes_window=200000
+
+rocksdb_default_cf_options=write_buffer_size=128m;target_file_size_base=32m;max_bytes_for_level_base=512m;level0_file_num_compaction_trigger=4;level0_slowdown_writes_trigger=10;level0_stop_writes_trigger=15;max_write_buffer_number=4;compression_per_level=kLZ4Compression;bottommost_compression=kZSTD;compression_opts=-14:1:0;block_based_table_factory={cache_index_and_filter_blocks=1;filter_policy=bloomfilter:10:false;whole_key_filtering=1};level_compaction_dynamic_level_bytes=true;optimize_filters_for_hits=true;compaction_pri=kMinOverlappingRatio
+
+rocksdb_wal_dir=/home/mijin/test_log
+
+rocksdb_use_direct_io_for_flush_and_compaction=ON
+rocksdb_use_direct_reads=ON
+```
+
+## MySQL initialize
+```bash
+$ sudo chmod +x scripts/mysql_install_db
+$ ./scripts/mysql_install_db --defaults-file=/home/lbh/myrocks.cnf
+```
+
+Start the server:
+
+```bash
+$ ./bin/mysqld_safe --defaults-file=/home/lbh/myrocks.cnf
+```
+
+Shutdown the server:
+
+```bash
+$ ./bin/mysqldadmin -uroot shutdown
+```
+##  MySQL Root Password 
+
+Set MySQL root password:
+
+```bash
+$ ./bin/mysqld_safe --defaults-file=/home/lbh/myrocks.cnf --skip-grant-tables --datadir=/home/lbh/test_data
+$ ./bin/mysql -uroot -S/tmp/mysql.sock -P3306
+
+root:(none)> use mysql;
+root:mysql> update user set authentication_string=password('evia6587') where user='root';
+root:mysql> flush privileges;
+root:mysql> quit;
+
+$ ./bin/mysql -uroot 
+
+root:mysql> set password = password('yourPassword');
+root:mysql> quit;
+```
+
 ## TPC-C Testing
 Since MyRocks ahve different storage engine and does not support foreign key, we need to create new sql file and load data. 
 
 ```bash
 $ cat create_table.sql | sed -e "s/Engine=InnoDB/Engine=RocksDB DEFAULT COLLATE=latin1_bin/g" > create_table_myrocks.sql
 $ grep -v "FOREIGN KEY" add_fkey_idx.sql > add_fkey_idx_myrocks.sql 
+```
+Change ```load.sh``` 
+```bash
+
 ```
 Do rest of the steps [likewise](https://github.com/LeeBohyun/mysql-tpcc/blob/master/multi-mysql-tpcc.md).
 
