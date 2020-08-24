@@ -60,7 +60,7 @@ binlog-format=ROW
 
 socket=/tmp/mysql.sock
 port=3306
-datadir=/home/mijin/test_data
+datadir=/home/lbh/test_data
 
 rocksdb_max_open_files=-1
 rocksdb_max_background_jobs=8
@@ -81,7 +81,7 @@ rocksdb_compaction_sequential_deletes_window=200000
 
 rocksdb_default_cf_options=write_buffer_size=128m;target_file_size_base=32m;max_bytes_for_level_base=512m;level0_file_num_compaction_trigger=4;level0_slowdown_writes_trigger=10;level0_stop_writes_trigger=15;max_write_buffer_number=4;compression_per_level=kLZ4Compression;bottommost_compression=kZSTD;compression_opts=-14:1:0;block_based_table_factory={cache_index_and_filter_blocks=1;filter_policy=bloomfilter:10:false;whole_key_filtering=1};level_compaction_dynamic_level_bytes=true;optimize_filters_for_hits=true;compaction_pri=kMinOverlappingRatio
 
-rocksdb_wal_dir=/home/mijin/test_log
+rocksdb_wal_dir=/home/lbh/test_log
 
 rocksdb_use_direct_io_for_flush_and_compaction=ON
 rocksdb_use_direct_reads=ON
